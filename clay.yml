@@ -1,0 +1,65 @@
+#
+# Le compilateur clay va par defaut aller regarder s'il y a un `clay.yml`, s'il y en a pas
+# il va chercher dans tous les .yml a la racine et check s'il y a un namespace `clay:` de dans, si oui
+# il va l'utiliser pour compiler.
+#
+# Avec un fichier de config, l'utiliser a juste a faire `./forge` ou `./forge --config=./path/conf.yml`
+#
+clay:
+  options:
+    - -j
+    - --verbose
+    - -l pthread
+  includes_path:
+    - ./includes/
+  rules:
+    watch:
+      cmd:
+      options:  # Rajoute les options lorsque la commande de compilation est lancée
+        - on_dependances_too: true # Les rajoutes aussi sur les dépendances
+        - --watch
+    fclean:
+      cmd:
+        - remove_objects:
+        - echo 'ahah'
+  objects:    # Object files are not necessary, but, else the compiler will relink each times it compiles
+    output: ./.objs/
+    relative: false # if `true`, the object files generated will be located next to the compiled files + the path `./.objs`
+    name: _yo_la_team.o # the final name will be `hash_algo_yo_la_team.o` if the compiled file has the name `hash_algo.cl` | BY DEFAULT is `.o`
+  output:
+    kind: lib
+    path: .
+    name: hasher
+  link:
+    - /lib/libc.a
+  depends_on: # auto link if MEgide and/or hopt are libraries
+    MEgide:
+      path: ./thirdparty/MEgide
+      to_includes: true # Will append to this `includes_path` the `includes_path` of MEgide | BY DEFAULT set to `false`
+      options: # to add some additionnal program options
+        - -j
+        - --verbose
+    hopt:
+      path: ./thirdparty/hopt
+      to_includes: true # Will append to this `includes_path` the `includes_path` of hopt | BY DEFAULT set to `false`
+      options: # to add some additionnal program options
+        - -j
+        - --verbose
+  sources:
+    raw_path: # if `path` is set before `prefix`, it will not be applied to this `path`
+      - ./main.cpp
+    prefix: ./FPP/sources/
+    suffix: .cpp
+    path: # `prefix` here, is applied
+      - ProgramOptions/Flags
+      - Symtab/Symtab
+      - FileHelpers/File
+      - FileHelpers/DependenciesPaths
+      - States/GState
+      - States/LState
+      - Logs/LogVerbosity
+      - CompilerAttributes/CompilerAttributes
+      - States/Arena
+      - Utils/djb2
+      - Preprocessing/Preprocessing
+      - Utils/id_generator
