@@ -5,8 +5,6 @@
 CLASSIC	= \033[0m
 WHITE	= \033[38;2;238;232;213m
 BOLD	= \033[1m
-UNDERLINE	= \033[4m
-# BLACK	= \033[38;2;0;0;0m
 BLACK	= \033[30m
 RED   	= \033[31m
 GREEN  	= \033[32m
@@ -23,70 +21,53 @@ NAME = kiln
 
 CXX = @clang++
 
-# ./FPP/sources/Preprocessing/Preprocessing.cpp
-# ./FPP/sources/Tokenizer/Tokenizer.cpp
+LMAKE = @make --no-print-directory -C
 
-SRCS =	./kiln.cpp
-
-LMAKE = @make -j --no-print-directory -C
+SRCS =	srcs/main.cpp \
+		srcs/kiln.cpp
 
 OBJS_DIR = .objs
 
-OBJS = $(SRCS:%.cpp=$(OBJS_DIR)/%.obj)
+OBJS = $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 
-DEPS = $(OBJS:%.obj=%.d)
+DEPS = $(OBJS:%.o=%.d)
 
-INCLUDES =
+CXXFLAGS = -std=c++20 -Wall -Wextra -O3 -fPIE -MMD -g3 #-fsanitize=address
 
-CFLAGS = -std=c++20 -Wall -Wextra -Wno-comment -Wno-unknown-pragmas -Wno-vla-cxx-extension -Wno-switch-bool -MMD -O3 -g3 -I ./includes/ -I ./hopt/ #-march=native
-#-Wno-non-template-friend 
-#-Wno-unsupported-friend
-
-LIB = -lpthread -L./hopt/ -lhopt
+INCLUDES = -I./srcs/includes/ -I./includes/ -I./hopt/includes/
 
 # ############## #
 #*    REGLES    *#
 # ############## #
 
-all: check_compilation $(NAME)
+all: libhopt $(NAME)
 
-check_compilation:
-	@if [ -f $(NAME) ] && \
-		[ -n "$(strip $(OBJS))" ] && \
-		[ -z "$$(find $(SRCS) -newer $(NAME) 2>/dev/null)" ]; then \
-		echo "$(BOLD)$(PURPLE)Tous les fichiers $(UNDERLINE)$(YELLOW)$(NAME)$(CLASSIC)$(BOLD)$(PURPLE) sont déjà compilés !$(CLASSIC)"; \
-		exit 0; \
-	fi
+libhopt:
+	$(LMAKE) hopt
 
 $(NAME): $(OBJS)
-	$(CXX) $(CFLAGS) $(OBJS) $(LIB) -o $@
-	@echo "$(BOLD)$(CYAN)Exécutable $(NAME) créé avec succès!$(CLASSIC)"
+	$(CXX) $(CXXFLAGS) $(OBJS) -L./hopt -lhopt -o $(NAME)
+	@echo "$(BOLD)$(CYAN)Executable $(NAME) créé avec succès!$(CLASSIC)"
 
-$(OBJS_DIR)/%.obj: %.cpp
+$(OBJS_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	@echo "$(GREEN)🗸 Compilation $(BOLD)$(YELLOW)$<$(CLASSIC)"
-	$(CXX) $(INCLUDES) $(CFLAGS) -c $< -o $@
+	$(CXX) $(INCLUDES) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	@echo "$(BOLD)$(RED)"
+	$(LMAKE) hopt clean
 	rm -rf $(OBJS_DIR)
 	@echo "$(CLASSIC)"
 
 fclean: clean
 	@echo "$(BOLD)$(RED)"
+	$(LMAKE) hopt fclean
 	rm -f $(NAME)
 	@echo "$(BOLD)$(GREEN)Tout a été supprimé... 🗑️\n$(CLASSIC)"
 
 re: fclean all
 
-.PHONY: all lib libre clean fclean re
+.PHONY: all clean fclean re libhopt
+
 -include $(DEPS)
-
-# ############## #
-#*    AUTRES    *#
-# ############## #
-
-YAY:
-	@echo "$(PURPLE)$(BOLD)Compilation avec les flags suivants : "
-	@echo $(CFLAGS)
-	@echo "$(CLASSIC)"

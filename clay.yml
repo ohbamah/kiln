@@ -6,6 +6,9 @@
 # Avec un fichier de config, l'utiliser a juste a faire `./forge` ou `./forge --config=./path/conf.yml`
 #
 clay:
+  env:
+  # ...
+  compiler: clang
   options:
     - -j
     - --verbose
@@ -14,12 +17,13 @@ clay:
     - ./includes/
   rules:
     watch:
-      cmd:
-      options:  # Rajoute les options lorsque la commande de compilation est lancée
-        - on_dependances_too: true # Les rajoutes aussi sur les dépendances
-        - --watch
+      description: Lorsqu'un fichier est modifié, recompile les fichiers qui y sont dépendant
+      cmd: echo ez
     fclean:
+      description: Supprime tous les objets générés et le binaire
       cmd:
+        - echo cringe
+        - remove_binary:
         - remove_objects:
         - echo 'ahah'
   objects:    # Object files are not necessary, but, else the compiler will relink each times it compiles
@@ -27,7 +31,7 @@ clay:
     relative: false # if `true`, the object files generated will be located next to the compiled files + the path `./.objs`
     name: _yo_la_team.o # the final name will be `hash_algo_yo_la_team.o` if the compiled file has the name `hash_algo.cl` | BY DEFAULT is `.o`
   output:
-    kind: lib
+    kind: bin
     path: .
     name: hasher
   link:

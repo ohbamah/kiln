@@ -53,6 +53,20 @@
 # define HOPT_MISSOPT				64	// If a mandatory option is not present
 # define HOPT_BADTYPE_NUM			128	// Bad option argument type (not numeric)
 
+	/***********************/
+	/*                     */
+	/*    HOPT SPECIALS    */
+	/*                     */
+	/***********************/
+
+# define HOPT_VARIADIC_ARGUMENTS			-1
+# define HOPT_VAARGS						HOPT_VARIADIC_ARGUMENTS
+
+# define HOPT_SPECIAL_SUBCMD_SEPARATOR_CHAR	(char)-1
+# define HOPT_SPECIAL_SUBCMD_SEPARATOR_STR	(char*)(char[]){ HOPT_SPECIAL_SUBCMD_SEPARATOR_CHAR, '\0' }
+# define HOPT_SSS_CHAR						HOPT_SPECIAL_SUBCMD_SEPARATOR_CHAR
+# define HOPT_SSS_STR						HOPT_SPECIAL_SUBCMD_SEPARATOR_STR
+
 	/********************/
 	/*                  */
 	/*    HOPT FLAGS    */
@@ -76,6 +90,7 @@
 # define _HOPT_TYPE_NUMLAST	HOPT_TYPE_DOUBLE
 # define _HOPT_TYPE_LAST	_HOPT_TYPE_NUMLAST
 
+// If you use HOPT_FLCB flag, you need to handle some errors, like bad arg count, yourself
 # define HOPT_FLCB			HOPT_TYPE_CB	// Set callback (incompatible with HOPT_TYPE_*)
 # define HOPT_TYPE_CB		7				// Set callback
 
@@ -88,13 +103,13 @@
 
 	/*******************/
 	/*                 */
-	/*    CMD FLAGS    */
+	/*    CMD HELPS    */
 	/*                 */
 	/*******************/
 
-# define HOPT_NOCMD			0
-//# define HOPT_THERE_IS_PCMD	1
-//# define HOPT_THERE_IS_NCMD	2
+# define hopt_subcmd(name, cb, arg, returns) \
+for (int __hopt_i = (hopt_subcmd_begin(name, cb, arg, returns), 1) ; __hopt_i ; __hopt_i = (hopt_subcmd_end(), 0))
+
 
 	/*******************/
 	/*                 */
@@ -102,7 +117,8 @@
 	/*                 */
 	/*******************/
 
-typedef int (*t_hopt_callback)(int, char**, void*); //ac, av, cb_arg
+typedef int		(*t_hopt_callback)(int, char**, void*); //ac, av, cb_arg
+typedef void*	(*t_hopt_subcommand_callback)(void*); // cb_arg
 
 typedef struct hopt_map
 {
@@ -131,22 +147,6 @@ extern int		hopt_nerr;
 extern char		hopt_cerr[HOPT_MAX_SSTR_SIZE];
 
 extern char		hopt_help_has_been_called_v;
-
-// Code to specify if there is a command before or/and after
-// Working progress
-//extern int		hopt_fcmd;
-
-// The command that refers to the next command (if exists)
-// Working progress
-//extern char		hopt_ncmd[HOPT_MAX_SSTR_SIZE];
-
-// The current command (if exists)
-// Working progress
-//extern char		hopt_ccmd[HOPT_MAX_SSTR_SIZE];
-
-// The command that refers to the previous command (if exists)
-// Working progress
-//extern char		hopt_pcmd[HOPT_MAX_SSTR_SIZE];
 
 	/*
 		CORE for HOPT
@@ -195,7 +195,8 @@ void	hopt_set_fd(int fd);
 void	hopt_set_file(FILE* file);
 # endif
 void	hopt_help_option(char* aliases, int automatic, int flagswhen);
-void	hopt_subcmd(char* cmd);
+void	hopt_subcmd_begin(char* cmd, t_hopt_subcommand_callback cb, void* arg, void** returns);
+void	hopt_subcmd_end(void);
 void	hopt_print_help_menu(char* cmd);
 // Undef allowed is not sorted, same for undef unallowed
 void	hopt_allow_undef(void);
