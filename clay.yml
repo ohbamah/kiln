@@ -7,54 +7,13 @@
 #
 clay:
   env:
-  # ...
-  compiler: clang
-  options:
-    - -j
-    - --verbose
-    - -l pthread
-  includes_path:
-    - ./includes/
-  rules:
-    watch:
-      description: Lorsqu'un fichier est modifié, recompile les fichiers qui y sont dépendant
-      cmd: echo ez
-    fclean:
-      description: Supprime tous les objets générés et le binaire
-      cmd:
-        - echo cringe
-        - remove_binary:
-        - remove_objects:
-        - echo 'ahah'
-  objects:    # Object files are not necessary, but, else the compiler will relink each times it compiles
-    output: ./.objs/
-    relative: false # if `true`, the object files generated will be located next to the compiled files + the path `./.objs`
-    name: _yo_la_team.o # the final name will be `hash_algo_yo_la_team.o` if the compiled file has the name `hash_algo.cl` | BY DEFAULT is `.o`
-  output:
-    kind: bin
-    path: .
-    name: hasher
-  link:
-    - /lib/libc.a
-  depends_on: # auto link if MEgide and/or hopt are libraries
-    MEgide:
-      path: ./thirdparty/MEgide
-      to_includes: true # Will append to this `includes_path` the `includes_path` of MEgide | BY DEFAULT set to `false`
-      options: # to add some additionnal program options
-        - -j
-        - --verbose
-    hopt:
-      path: ./thirdparty/hopt
-      to_includes: true # Will append to this `includes_path` the `includes_path` of hopt | BY DEFAULT set to `false`
-      options: # to add some additionnal program options
-        - -j
-        - --verbose
+    WATCH_CONF_TIME: '*/30 * * * * *'
   sources:
-    raw_path: # if `path` is set before `prefix`, it will not be applied to this `path`
-      - ./main.cpp
+    raw_paths: # if `path` is set before `prefix`, it will not be applied to this `path`
+      - main.cpp
     prefix: ./FPP/sources/
     suffix: .cpp
-    path: # `prefix` here, is applied
+    paths: # `prefix` here, is applied
       - ProgramOptions/Flags
       - Symtab/Symtab
       - FileHelpers/File
@@ -67,3 +26,63 @@ clay:
       - Utils/djb2
       - Preprocessing/Preprocessing
       - Utils/id_generator
+  compiler: clang
+  options:
+    - --verbose
+  includes_paths:
+    - ./includes/
+  rules:
+    base:
+    watch:
+    clean:
+    oclean:
+    fclean:
+    re:
+    custom_rule:
+      description: Hihi
+      cmd: |
+        echo FEUR
+  objects:    # Object files are not necessary, but, else the compiler will relink each times it compiles
+    path: .objs
+    relative: false
+    suffix: _yo_la_team
+    extension: obj
+    headers:
+      relative: false # sub-keys is same than objets, but generate *.d files only if at least the key `headers:` is declared
+             # their default values is same than objects except for the `extension` (is 'd')
+  output:
+    kind: bin
+    path: .
+    name: hasher
+  links:
+    - /lib/libc.a
+  links_paths:
+    - /lib_x64_86/
+  depends_on: # auto link if MEgide and/or hopt are libraries
+    MEgide:
+      path: ./thirdparty/MEgide
+      to_includes: true # Will append to this `includes_paths` the `includes_paths` of MEgide | BY DEFAULT set to `false`
+      options: # to add some additionnal program options
+        - --verbose
+    hopt:
+      path: ./thirdparty/hopt
+      to_includes: true # Will append to this `includes_paths` the `includes_paths` of hopt | BY DEFAULT set to `false`
+      options: # to add some additionnal program options
+        - --verbose
+  output_format:
+    colors: true
+    messages:
+      on_start: 'Starting compilation!'
+      on_end: 'Compilation finished!'
+      for_each_files:
+        always: 'Checking file %s'
+        skipped: 'File %s already compiled'
+        dirty: '%s compiling...'
+      on_error: '❌ Build failed: %s'
+      on_success: '✅ Build successful of %s'
+      on_nothing_to_do: ''
+    scripts:
+      for_each_files:
+        always: scripts/progress_bar.sh {filename} {total_file_count} {percent} {status}
+    show_commands: false
+    show_stats: true # Compilation time + files number + ...

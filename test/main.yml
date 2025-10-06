@@ -1,0 +1,24 @@
+clay:
+  compiler: clang
+  sources:
+    paths:
+      - main.c
+  objects:
+    path: .objs
+    relative: false
+    headers:
+      relative: false
+      path: .objs
+
+  output:
+    kind: bin
+    path: .
+    name: kiln_test
+
+  output_format:
+    messages:
+      on_nothing_to_do: yo mister White
+    scripts:
+      on_start: echo "\\\033[1mYo\\\033[0m"
+    show_commands: false
+    show_stats: true # Compilation time + files number + ...

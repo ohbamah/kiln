@@ -4,6 +4,10 @@
 # define DEFAULT_CONFIG_FILENAME    (char*)"./clay.yml"
 
 # include "nodes.hpp"
+# include "fetch.hpp"
+# include "generate.hpp"
+# include "structs.hpp"
+# include "utils.hpp"
 
 extern "C" {
     # include "hopt.h"

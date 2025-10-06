@@ -24,7 +24,10 @@ CXX = @clang++
 LMAKE = @make --no-print-directory -C
 
 SRCS =	srcs/main.cpp \
-		srcs/kiln.cpp
+		srcs/kiln.cpp \
+		srcs/utils.cpp \
+		srcs/generate.cpp \
+		srcs/fetch.cpp
 
 OBJS_DIR = .objs
 
@@ -32,7 +35,7 @@ OBJS = $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 
 DEPS = $(OBJS:%.o=%.d)
 
-CXXFLAGS = -std=c++20 -Wall -Wextra -O3 -fPIE -MMD -g3 #-fsanitize=address
+CXXFLAGS = -std=c++20 -Wall -Wextra -Wno-missing-field-initializers -O3 -fPIE -MMD -MP -g3 #-fsanitize=address
 
 INCLUDES = -I./srcs/includes/ -I./includes/ -I./hopt/includes/
 

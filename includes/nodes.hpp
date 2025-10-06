@@ -365,8 +365,23 @@ private:
             Node::anchors.emplace(mapArg.data, this);
         else
         {
-            this->kind_ = Kinds::String;
-            this->SetString(mapArg.data);
+            // WTF
+            std::cout << "maparg: \"" << mapArg.data << "\"" << std::endl;
+            if (mapArg.data == "true")
+            {
+                this->kind_ = Kinds::Boolean;
+                this->SetBoolean(true);
+            }
+            else if (mapArg.data == "false")
+            {
+                this->kind_ = Kinds::Boolean;
+                this->SetBoolean(false);
+            }
+            else
+            {
+                this->kind_ = Kinds::String;
+                this->SetString(mapArg.data);
+            }
         }
     }
 
@@ -385,8 +400,23 @@ private:
         // Traiter la valeur sur la même ligne (si elle existe)
         if (!map_arg.is_empty()) {
             // std::cout << "HandleMap: setting string value: '" << map_arg.data << "'" << std::endl;
-            child.SetString(map_arg.data);
-            child.kind_ = Kinds::String;
+            // child.SetString(map_arg.data);
+            // child.kind_ = Kinds::String;
+            if (map_arg.data == "true")
+            {
+                child.kind_ = Kinds::Boolean;
+                child.SetBoolean(true);
+            }
+            else if (map_arg.data == "false")
+            {
+                child.kind_ = Kinds::Boolean;
+                child.SetBoolean(false);
+            }
+            else
+            {
+                child.kind_ = Kinds::String;
+                child.SetString(map_arg.data);
+            }
         }
         // Sinon, parser les enfants (si ils existent)
         else if (i < Node::lines.size() && Node::lines[i].blockLevel > currentBlockLevel) {
@@ -489,24 +519,26 @@ private:
             }
             if (!in_quote)
                 quote = this->is_quote(data[arg_pos]);
-            if (data[arg_pos] == quote)
+            if (quote && data[arg_pos] == quote)
+            {
                 in_quote = !in_quote;
+                if (!in_quote)
+                    quote = 0;
+            }
             else
             {
                 if (data[arg_pos] == ' ' && !in_quote)
                 {
                     map_arg.data.push_back(' ');
                     this->SkipSpaces(data, arg_pos);
-                    if (!data[arg_pos] || data[arg_pos] == '\n')
+                    if (!data[arg_pos] || data[arg_pos] == '#' || data[arg_pos] == '\n')
                         break;
+                    --arg_pos;
                 }
                 else if (data[arg_pos] == '#' && !in_quote)
-                {
-                    if (map_arg.data[map_arg.data.size() - 1] == ' ')
-                        map_arg.data.pop_back();
                     break ;
-                }
-                map_arg.data.push_back(data[arg_pos]);
+                else
+                    map_arg.data.push_back(data[arg_pos]);
             }
         }
         map_arg.size = i;
@@ -545,7 +577,7 @@ private:
         {
             if (!in_quote)
                 quote = this->is_quote(data[j]);
-            if (data[j] == quote)
+            if (quote && data[j] == quote)
                 in_quote = !in_quote;
             else if (data[j] == ':' && !in_quote)
                 return keyname;
@@ -802,39 +834,6 @@ private:
             identifier.pop_back(); 
     }
 
-    void
-    __pushQuotesRespectability(std::string& sequence, unsigned int n, const char* data, ulong& i)
-    {
-        this->SkipSpaces(data, i);
-        char quote = this->is_quote(data[i]);
-        if (quote)
-        {
-            ++i; // Skip the first quote
-            for (unsigned int j = 0 ; j < n && data[i] && data[i] != quote ; ++i, ++j)
-            {
-                if (data[i] == '\n')
-                    throw (BadYamlMapFormat("There is newlines in keyname, bad format: %s", sequence.c_str()));
-                sequence.push_back(data[i]);
-            }
-            if (data[i] != quote)
-                throw (BadYamlMapFormat("The end quote is missing: %s", sequence.c_str()));
-            ++i; // Skip the last quote
-        }
-        else
-        {
-            for (unsigned int j = 0 ; j < n && data[i] && data[i] != '\n' ; ++i, ++j)
-            {
-                if (data[i] == ' ')
-                    sequence.push_back(' ');
-                for ( ; data[i] && data[i] == ' ' ; ++i) ;
-                if (data[i] == '\n')
-                    break;
-                sequence.push_back(data[i]);
-            }
-            this->__trimLastSpaces(sequence);
-        }
-    }
-
     Node&
     __required(const char key[])
     {
@@ -847,14 +846,13 @@ private:
     __require(const char key[])
     {
         if (this->kind_ != Kinds::Map)
-            throw (KeyIsRequired("It is not a YAML Map"));
-        if (this->kind_ == Kinds::Map)
+            throw (IsNotYamlMap("You can't access to the key %s because is not a map", key));
+        else
         {
             if (this->Map().contains(key) == false)
                 throw (KeyIsRequired("Key `%s` does not exist", key));
             return this->Map()[key];
         }
-        throw (std::runtime_error("Is not a map, you can't access by a key value"));
     }
 
     Kinds&
@@ -866,13 +864,19 @@ private:
     Node&
     at(const char key[])
     {
-        if (this->kind_ == Kinds::Map)
+        if (this->kind_ == Kinds::Undefined)
+        {
+            static Node undefined_node(Kinds::Undefined);
+            return undefined_node;
+        }
+        if (this->kind_ != Kinds::Map)
+            throw (IsNotYamlMap("You can't access to the key %s because is not a map", key));
+        else
         {
             if (this->Map().contains(key) == false)
                 return this->return_or_throw(key);
             return this->Map()[key];
         }
-        throw (std::runtime_error("Is not a map, you can't access by a key value"));
     }
 
     Node&
