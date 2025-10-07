@@ -78,6 +78,7 @@ struct FinalCommand
 {
     std::string                 compiler;
     std::string                 options;
+    std::string                 runtime_options;
     std::string                 links;
     std::string                 includes;
     std::string                 links_paths;

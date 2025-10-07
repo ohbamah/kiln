@@ -1,0 +1,61 @@
+#
+# Le compilateur clay va par defaut aller regarder s'il y a un `clay.yml`, s'il y en a pas
+# il va chercher dans tous les .yml a la racine et check s'il y a un namespace `clay:` de dans, si oui
+# il va l'utiliser pour compiler.
+#
+# Avec un fichier de config, l'utiliser a juste a faire `./forge` ou `./forge --config=./path/conf.yml`
+#
+kiln:
+  env:
+    WATCH_CONF_TIME: '*/30 * * * * *'
+  compiler: clang++
+  sources:
+    prefix: srcs/
+    suffix: .cpp
+    paths:
+      - fetch
+      - generate
+      - kiln
+      - main
+      - utils
+  options:
+    - -std=c++20
+    - -Wall
+    - -Wextra
+    - -Wno-missing-field-initializers
+    - -O3
+    - -fPIE
+    - -g3
+  runtime_options:
+    - -fsanitize=address
+  includes_paths:
+    - hopt/includes
+    - srcs/includes
+    - includes
+  rules:
+    base:
+    watch:
+    clean:
+    oclean:
+    fclean:
+    re:
+  objects:
+    path: .objs
+    relative: false
+    headers:
+      path: .objs
+      relative: false
+  output:
+    kind:
+    name: kiln
+  links:
+    - libhopt.a
+  links_paths:
+    - hopt
+  output_format:
+    scripts:
+      for_each_file:
+        after: echo '"✔️ \\033[1;32mCompilation \\033[38;2;250;189;0m$SOURCE_FILENAME\\033[0m"'
+      on_success: echo '"\\033[1;36mExécutable $OUTPUT_FILENAME créé avec succès!\\033[0m"'
+      on_error: echo '"❌​\\033[1;31mÉchec de la création de $OUTPUT_FILENAME\\033[0m"'
+      on_nothing_to_do: echo '"\\033[1;38;2;211;54;130mAll has already been done!\\033[0m"'

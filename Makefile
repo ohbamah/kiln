@@ -35,7 +35,7 @@ OBJS = $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 
 DEPS = $(OBJS:%.o=%.d)
 
-CXXFLAGS = -std=c++20 -Wall -Wextra -Wno-missing-field-initializers -O3 -fPIE -MMD -MP -g3 #-fsanitize=address
+CXXFLAGS = -std=c++20 -Wall -Wextra -Wno-missing-field-initializers -O3 -fPIE -MMD -MP -g3 -fsanitize=address
 
 INCLUDES = -I./srcs/includes/ -I./includes/ -I./hopt/includes/
 

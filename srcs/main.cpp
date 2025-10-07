@@ -66,6 +66,7 @@ handle_final_command(FinalCommand& finalCommand, Node& config)
     Fetch::source_files(finalCommand.sourceFiles, config.require("sources"));
     Fetch::compiler(finalCommand.compiler, config["compiler"]);
     Generate::options(finalCommand.options, config["options"]);
+    Generate::options(finalCommand.runtime_options, config["runtime_options"]);
     Generate::includes_paths(finalCommand.includes, config["includes_paths"]);
     Generate::links_paths(finalCommand.links_paths, config["links_paths"]);
     Generate::links(finalCommand.links, config["links"]);
@@ -107,12 +108,12 @@ int kiln(int ac, char** av)
 
     hopt_help_option((char*)"h=-help", true, HOPT_UNDEFINED | HOPT_MISSOARGC | HOPT_REDEFINED | HOPT_BADSORDER | HOPT_BADTYPE_NUM);
     try {
-        yml.required("clay");
+        yml.required("kiln");
         handle_env(yml);
         handle_subcmd(yml);
         handle_final_command(finalCommand, yml);
     } catch(const Node::KeyIsRequired& e) {
-        printf("Namespace `clay:` is required for a clay YAML config file.\n");
+        printf("Namespace `kiln:` is required for a kiln YAML config file.\n");
     } catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
     }

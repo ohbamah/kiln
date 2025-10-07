@@ -36,8 +36,20 @@ Generate::links_paths(std::string& finalLinksPathes, Node& links_paths)
 void
 Generate::links(std::string& finalLinks, Node& links)
 {
-    if (links && links.kind() == Kinds::List)
-        for (unsigned long i = 0 ; i < links.size() ; ++i)
-            if (links[i].kind() == Kinds::String)
-                finalLinks += "-l:" + std::string(links[i]) + " ";
+    if (links && links.kind() == Kinds::List) {
+        for (unsigned long i = 0 ; i < links.size() ; ++i) {
+            if (links[i].kind() == Kinds::String) {
+                std::string link = std::string(links[i]);
+                if (link.starts_with("lib") && link.ends_with(".a")) {
+                    // Convertir libhopt.a -> hopt pour -l
+                    std::string libname = link.substr(3, link.length() - 5);
+                    finalLinks += "-l" + libname + " ";
+                } else if (link.ends_with(".a") || link.ends_with(".so")) {
+                    finalLinks += "-l:" + link + " ";
+                } else {
+                    finalLinks += "-l" + link + " ";
+                }
+            }
+        }
+    }
 }

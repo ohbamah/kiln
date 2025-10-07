@@ -33,6 +33,7 @@ Utils::remove_extension_in_filename(const std::string& filename)
     ret.erase(ret.begin() + pos, ret.end());
     return ret;
 }
+#include<iostream>
 
 bool
 Utils::compare_source_timestamp(const std::string& sourceFilename, const std::string& objectFilename)
@@ -43,9 +44,15 @@ Utils::compare_source_timestamp(const std::string& sourceFilename, const std::st
     if (stat(std::string(sourceFilename.begin(), sourceFilename.end() - 1).c_str(), &ssource) == -1)
         return NOT_RECOMPILE;
     if (stat(objectFilename.c_str(), &sobject) == -1)
+    {
+        std::cout << "not exists\n";
         return RECOMPILE;
+    }
     if (ssource.st_mtimespec.tv_sec > sobject.st_mtimespec.tv_sec)
+    {
+        std::cout << "timestamp >\n";
         return RECOMPILE;
+    }
     return NOT_RECOMPILE;
 }
 
@@ -99,7 +106,7 @@ Utils::parse_dependencies_file(std::vector<std::string>& dependenceFiles, const 
         if (data[0] != '\n')
         {
             int i = 0;
-            for ( ; data[i] ; ++i)
+            for ( ; i < file_size ; ++i)
             {
                 if (data[i] == '\n' && data[i - 1] != '\\')
                 {
@@ -108,12 +115,13 @@ Utils::parse_dependencies_file(std::vector<std::string>& dependenceFiles, const 
                 }
             }
             std::string dependenciesFile;
-            for ( ; data[i] ; ++i)
+            for ( ; i < file_size ; ++i)
             {
-                if (data[i + 1] == '\n' && data[i] == ':')
+                if (data[i] == ':' && data[i + 1] == '\n')
                 {
                     dependenceFiles.emplace_back(dependenciesFile);
-                    dependenciesFile = "";
+                    dependenciesFile.clear();
+                    ++i;
                 }
                 else
                     dependenciesFile.push_back(data[i]);
@@ -131,7 +139,7 @@ Utils::dirname(char* path)
 	char*	dirname = strrchr(path, '/');
 
 	if (!dirname)
-		return (".");
+        return (const_cast<char*>("."));
 	*(dirname + 1) = '\0';
 	return (path);
 }
