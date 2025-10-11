@@ -11,7 +11,16 @@ handle_hopt_error()
 }
 
 void
-generate_rules_as_subcmd(Node& config)
+generate_basic_program_options(Hopt& opt)
+{
+    hopt_group((char*)"\033[1mKILN OPTIONS:\033[0m");
+    hopt_add_option((char*)"c=-config", 1, 0, &opt.config_filename, "Path of the config file");
+    hopt_add_option((char*)"d=-dry-run", 0, 0, &opt.dry_run, "Does not execute the final command");
+    hopt_add_option((char*)"v=-verbose", 0, 0, &opt.verbose, "Print the final command before execution");
+}
+
+void
+generate_rules_as_subcmd(Hopt& opt, Node& config)
 {
     Node&   rules = config["rules"];
 
@@ -20,22 +29,24 @@ generate_rules_as_subcmd(Node& config)
         for (unsigned long i = 0 ; i < rules.size() ; ++i)
         {
             Node&               rule = rules[i];
-            std::string         cmd;
+            std::string         run;
             std::string         description;
             const std::string&  ruleName = rules.keyname(i);
 
             if (rule["description"])
                 description = (std::string)rule["description"];
-            if (rule["cmd"])
-                cmd = (std::string)rule["cmd"];
+            if (rule["run"])
+                run = (std::string)rule["run"];
 
-            Rule*   rule_props = new Rule(ruleName, cmd); // To `delete`
-            hopt_subcmd(strdup(ruleName.c_str()), Kiln::FindOrCreateShellCommand, (void*)rule_props, NULL)
+            Rule*   rule_props = new Rule(ruleName, run); // To `delete`
+            rule_props->opt = &opt;
+            hopt_subcmd(strdup(ruleName.c_str()), Kiln::find_or_create_shell_subcommand, (void*)rule_props, NULL)
             {
                 hopt_help_option((char*)"h=-help", 1, 0);
-                if (description.empty() && Kiln::default_commands.contains(ruleName))
-                    description = Kiln::default_commands[ruleName].second;
+                if (description.empty() && Kiln::rules_map.contains(ruleName))
+                    description = Kiln::rules_map[ruleName].second;
                 hopt_program_description(strdup(description.c_str()));
+                generate_basic_program_options(opt);
             }
         }
     }
@@ -54,39 +65,54 @@ handle_env(Node& config)
 }
 
 void
-handle_subcmd(Node& config)
+handle_subcmd(Hopt& opt, Node& config)
 {
     hopt_group((char*)"\033[1mCONFIGURATION FILE RULES:\033[0m");
-    generate_rules_as_subcmd(config);
+    generate_rules_as_subcmd(opt, config);
 }
 
 void
-handle_final_command(FinalCommand& finalCommand, Node& config)
+handle_final_command(KilnData& kilnData, Node& config)
 {
-    Fetch::source_files(finalCommand.sourceFiles, config.require("sources"));
-    Fetch::compiler(finalCommand.compiler, config["compiler"]);
-    Generate::options(finalCommand.options, config["options"]);
-    Generate::options(finalCommand.runtime_options, config["runtime_options"]);
-    Generate::includes_paths(finalCommand.includes, config["includes_paths"]);
-    Generate::links_paths(finalCommand.links_paths, config["links_paths"]);
-    Generate::links(finalCommand.links, config["links"]);
-    Fetch::objects_info(finalCommand.objects, config["objects"]);
-    Fetch::dependencies_info(finalCommand.dependencies, config["objects"]["headers"]);
-    Fetch::output(finalCommand.output, config["output"]);
-    Fetch::output_format(finalCommand.outputFormat, config["output_format"]);
-    Kiln::construct_final_command(finalCommand);
+    Fetch::source_files(kilnData.sourceFiles, config.require("sources"));
+    Fetch::compiler(kilnData.compiler, config["compiler"]);
+    Generate::options(kilnData.options, config["options"]);
+    Generate::options(kilnData.runtime_options, config["runtime_options"]);
+    Generate::includes_paths(kilnData.includes, config["includes_paths"]);
+    Generate::links_paths(kilnData.links_paths, config["links_paths"]);
+    Generate::links(kilnData.links, config["links"]);
+    Fetch::objects_info(kilnData.objects, config["objects"]);
+    Fetch::dependencies_info(kilnData.dependencies, config["objects"]["headers"]);
+    Fetch::output(kilnData.output, config["output"]);
+    Fetch::output_format(kilnData.outputFormat, config["output_format"]);
+    Kiln::create_mkdir_p_command(kilnData);
+    Kiln::construct_output_command(kilnData);
+    Kiln::create_final_command(kilnData);
+
+    setenv("OUTPUT_PATH", kilnData.output.path.c_str(), true);
+    setenv("OUTPUT_TYPE", kilnData.output.type == OutputType::Binary ? "binary" : "library", true);
+    setenv("OUTPUT_FILENAME", kilnData.output.name.c_str(), true);
+    setenv("OBJECTS_PATH", kilnData.objects.path.c_str(), true);
+}
+
+void
+base_rule(Hopt& opt, KilnData& kilnData)
+{
+    if (opt.verbose)
+        Kiln::print_final_commands(kilnData);
+    if (!opt.dry_run)
+        Kiln::execute_final_commands(kilnData);
 }
 
 int kiln(int ac, char** av)
 {
-    Hopt    opt = { 0 };
-    char*   config_filename = DEFAULT_CONFIG_FILENAME;
+    Hopt    opt = {
+        .config_filename = DEFAULT_CONFIG_FILENAME
+    };
 
     hopt_program_description((char*)"Kiln is a tool to compile C/Clay files with a yml config file.");
-    hopt_group((char*)"\033[1mKILN OPTIONS:\033[0m");
-    hopt_add_option((char*)"c=-config", 1, 0, &config_filename, "Path of the config file");
-    hopt_add_option((char*)"d=-dry-run", 0, 0, &opt.dry_run, "Does not execute the final command");
-    hopt_add_option((char*)"v=-verbose", 0, 0, &opt.verbose, "Print the final command before execution");
+    generate_basic_program_options(opt);
+    // hopt_add_option((char*)"");
 
         // For only the KILN's DEFAULT options
     hopt_allow_undef();
@@ -97,9 +123,9 @@ int kiln(int ac, char** av)
 
     // Try to open the YAML file
     Node            yml;
-    FinalCommand    finalCommand;
+    KilnData    kilnData;
     try {
-        yml = Node(config_filename);
+        yml = Node(opt.config_filename);
     } catch (const std::exception& e) {
         hopt_print_help_menu(NULL);
         std::cout << "\n" << e.what() << std::endl;
@@ -110,8 +136,8 @@ int kiln(int ac, char** av)
     try {
         yml.required("kiln");
         handle_env(yml);
-        handle_subcmd(yml);
-        handle_final_command(finalCommand, yml);
+        handle_subcmd(opt, yml);
+        handle_final_command(kilnData, yml);
     } catch(const Node::KeyIsRequired& e) {
         printf("Namespace `kiln:` is required for a kiln YAML config file.\n");
     } catch (const std::exception& e) {
@@ -126,10 +152,8 @@ int kiln(int ac, char** av)
     if (hopt_help_has_been_called())
         return 0;
 
-    if (opt.verbose)
-        Kiln::print_final_commands(finalCommand);
-    if (!opt.dry_run)
-        Kiln::execute_final_commands(finalCommand);
+    if (!Kiln::at_least_one_subcommand_has_been_executed)
+        base_rule(opt, kilnData);
 
     hopt_free();
     return 0;

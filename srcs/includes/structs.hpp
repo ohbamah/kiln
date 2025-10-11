@@ -7,15 +7,23 @@
 # include <string>
 # include <vector>
 
+struct Hopt
+{
+    char        dry_run;
+    char        verbose;
+    const char* config_filename;
+};
+
 struct Rule
 {
-    Rule(const std::string& rulename, const std::string& cmd) : rulename(rulename), cmd(cmd)
+    Rule(const std::string& rulename, const std::string& run) : rulename(rulename), run(run)
     {}
     ~Rule()
     {}
 
     std::string rulename;
-    std::string cmd;
+    std::string run;
+    Hopt*       opt;
 };
 
 enum class OutputType
@@ -74,7 +82,15 @@ struct Dependencies
     bool        active;
 };
 
-struct FinalCommand
+struct Commands
+{
+    std::string                 mkdirP;
+    std::vector<std::string>    objectCompilation;
+    std::string                 outputCompilation;
+    std::string                 finalExec;
+};
+
+struct KilnData
 {
     std::string                 compiler;
     std::string                 options;
@@ -85,20 +101,16 @@ struct FinalCommand
     std::vector<std::string>    sourceFiles;
     std::vector<std::string>    objectFiles;
     std::vector<std::string>    headerDependenciesFiles;
-    std::vector<std::string>    objectCompilationCommands;
+    // std::vector<std::string>    objectCompilationCommands;
     std::vector<std::string>*   filesToCompile;
-    std::string                 commandStringified;
+    // std::string                 commandStringified;
+    // std::string                 commandMkdirP;
+    Commands                    commands;
     Output                      output;
     OutputFormat                outputFormat;
     ObjectInfo                  objects;
     Dependencies                dependencies;
     bool                        isFinalFileExists = true;
-};
-
-struct Hopt
-{
-    char    dry_run;
-    char    verbose;
 };
 
 #endif

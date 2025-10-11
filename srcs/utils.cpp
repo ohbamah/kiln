@@ -41,18 +41,15 @@ Utils::compare_source_timestamp(const std::string& sourceFilename, const std::st
     struct stat ssource;
     struct stat sobject;
 
-    if (stat(std::string(sourceFilename.begin(), sourceFilename.end() - 1).c_str(), &ssource) == -1)
+    if (stat(std::string(sourceFilename.begin(), sourceFilename.end()).c_str(), &ssource) == -1)
         return NOT_RECOMPILE;
     if (stat(objectFilename.c_str(), &sobject) == -1)
     {
-        std::cout << "not exists\n";
+        // std::cout << "not exists\n";
         return RECOMPILE;
     }
     if (ssource.st_mtimespec.tv_sec > sobject.st_mtimespec.tv_sec)
-    {
-        std::cout << "timestamp >\n";
         return RECOMPILE;
-    }
     return NOT_RECOMPILE;
 }
 
@@ -105,7 +102,7 @@ Utils::parse_dependencies_file(std::vector<std::string>& dependenceFiles, const 
     {
         if (data[0] != '\n')
         {
-            int i = 0;
+            unsigned int i = 0;
             for ( ; i < file_size ; ++i)
             {
                 if (data[i] == '\n' && data[i - 1] != '\\')
