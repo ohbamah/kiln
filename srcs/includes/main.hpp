@@ -9,6 +9,8 @@
 # include "generate.hpp"
 # include "structs.hpp"
 # include "utils.hpp"
+# include "watch.hpp"
+# include "DateTime.hpp"
 
 extern "C" {
     # include "hopt.h"

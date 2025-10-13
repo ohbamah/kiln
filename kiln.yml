@@ -32,6 +32,9 @@ kiln:
       - main
       - utils
       - print
+      - watch
+      - termios
+      - DateTime
   options:
     - -std=c++20
     - -Wall

@@ -17,6 +17,10 @@ generate_basic_program_options(Hopt& opt)
     hopt_add_option((char*)"c=-config", 1, 0, &opt.config_filename, "Path of the config file");
     hopt_add_option((char*)"d=-dry-run", 0, 0, &opt.dry_run, "Does not execute the final command");
     hopt_add_option((char*)"v=-verbose", 0, 0, &opt.verbose, "Print the final command before execution");
+    hopt_add_option((char*)"w=-watch", 0, 0, &opt.is_watching, "Watch source files & dependencies, and if one of them is modified, recompile all");
+    hopt_add_option((char*)"s=-no-scripts", 0, 0, &opt.no_scripts, "Don't execute scripts of the config file");
+    hopt_add_option((char*)"m=-no-messages", 0, 0, &opt.no_messages, "Don't print messages of the config file");
+    hopt_add_option((char*)"n=-no-format", 0, 0, &opt.no_format, "Do nothing about formatted output");
 }
 
 void
@@ -101,7 +105,7 @@ base_rule(Hopt& opt, KilnData& kilnData)
     if (opt.verbose)
         Kiln::print_final_commands(kilnData);
     if (!opt.dry_run)
-        Kiln::execute_final_commands(kilnData);
+        Kiln::execute_final_commands(opt, kilnData);
 }
 
 int kiln(int ac, char** av)
@@ -112,7 +116,6 @@ int kiln(int ac, char** av)
 
     hopt_program_description((char*)"Kiln is a tool to compile C/Clay files with a yml config file.");
     generate_basic_program_options(opt);
-    // hopt_add_option((char*)"");
 
         // For only the KILN's DEFAULT options
     hopt_allow_undef();
@@ -156,6 +159,10 @@ int kiln(int ac, char** av)
         base_rule(opt, kilnData);
 
     hopt_free();
+
+    if (opt.is_watching)
+        Watch::Call(yml, opt, kilnData);
+
     return 0;
 }
 

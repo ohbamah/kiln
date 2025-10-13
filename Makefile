@@ -28,7 +28,10 @@ SRCS =	srcs/main.cpp \
 		srcs/utils.cpp \
 		srcs/generate.cpp \
 		srcs/fetch.cpp \
-		srcs/print.cpp
+		srcs/print.cpp \
+		srcs/watch.cpp \
+		srcs/DateTime.cpp \
+		srcs/termios.cpp
 
 OBJS_DIR = .objs
 

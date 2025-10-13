@@ -30,6 +30,9 @@ namespace Utils
 
     char*
     dirname(char* path);
+
+    void
+    replace_rule_escaping(std::string& res, const std::string& cmd);
 }
 
 #endif

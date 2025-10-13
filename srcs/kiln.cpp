@@ -112,7 +112,7 @@ Kiln::print_final_commands(const KilnData& kilnData)
 }
 
 void
-Kiln::execute_final_commands(KilnData& kilnData)
+Kiln::execute_final_commands(Hopt& opt, KilnData& kilnData)
 {
     bool            error = false;
     unsigned long   compiled_file = 0;
@@ -121,7 +121,7 @@ Kiln::execute_final_commands(KilnData& kilnData)
         system(kilnData.commands.mkdirP.c_str());
     if (kilnData.commands.objectCompilation.size() > 0)
     {
-        Print::on_start(kilnData.outputFormat);
+        Print::on_start(opt, kilnData.outputFormat);
         for (unsigned long i = 0 ; i < kilnData.commands.objectCompilation.size() ; ++i)
         {
             if (!kilnData.commands.objectCompilation[i].empty())
@@ -130,29 +130,29 @@ Kiln::execute_final_commands(KilnData& kilnData)
                     setenv("SOURCE_FILENAME", kilnData.sourceFiles[i].c_str(), true);
                 if (i < kilnData.objectFiles.size())
                     setenv("OBJECT_FILENAME", kilnData.objectFiles[i].c_str(), true);
-                Print::before_each_file(kilnData.outputFormat);
+                Print::before_each_file(opt, kilnData.outputFormat);
                 if (system(kilnData.commands.objectCompilation[i].c_str()) != 0)
                     error = true;
-                Print::after_each_file(kilnData.outputFormat);
+                Print::after_each_file(opt, kilnData.outputFormat);
                 ++compiled_file;
             }
         }
         if (compiled_file > 0)
         {
             if (error)
-                Print::on_error(kilnData.outputFormat);
+                Print::on_error(opt, kilnData.outputFormat);
             else if (!error)
             {
                 system(kilnData.commands.finalExec.c_str());
-                Print::on_success(kilnData.outputFormat);
+                Print::on_success(opt, kilnData.outputFormat);
             }
         }
         else
-            Print::on_nothing_to_do(kilnData.outputFormat);
+            Print::on_nothing_to_do(opt, kilnData.outputFormat);
     }
     else
-        Print::on_nothing_to_do(kilnData.outputFormat);
-    Print::on_end(kilnData.outputFormat);
+        Print::on_nothing_to_do(opt, kilnData.outputFormat);
+    Print::on_end(opt, kilnData.outputFormat);
 }
 
 void

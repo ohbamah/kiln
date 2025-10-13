@@ -1,7 +1,7 @@
 #include "print.hpp"
 
 void
-Print::on_start(OutputFormat& outputFormat)
+Print::on_start(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.on_start;
     std::string&    script = outputFormat.scripts.on_start;
@@ -10,7 +10,7 @@ Print::on_start(OutputFormat& outputFormat)
 }
 
 void
-Print::before_each_file(OutputFormat& outputFormat)
+Print::before_each_file(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.for_each_file.before;
     std::string&    script = outputFormat.scripts.for_each_file.before;
@@ -19,7 +19,7 @@ Print::before_each_file(OutputFormat& outputFormat)
 }
 
 void
-Print::after_each_file(OutputFormat& outputFormat)
+Print::after_each_file(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.for_each_file.after;
     std::string&    script = outputFormat.scripts.for_each_file.after;
@@ -28,7 +28,7 @@ Print::after_each_file(OutputFormat& outputFormat)
 }
 
 void
-Print::on_error(OutputFormat& outputFormat)
+Print::on_error(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.on_error;
     std::string&    script = outputFormat.scripts.on_error;
@@ -37,7 +37,7 @@ Print::on_error(OutputFormat& outputFormat)
 }
 
 void
-Print::on_success(OutputFormat& outputFormat)
+Print::on_success(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.on_success;
     std::string&    script = outputFormat.scripts.on_success;
@@ -46,7 +46,7 @@ Print::on_success(OutputFormat& outputFormat)
 }
 
 void
-Print::on_nothing_to_do(OutputFormat& outputFormat)
+Print::on_nothing_to_do(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.on_nothing_to_do;
     std::string&    script = outputFormat.scripts.on_nothing_to_do;
@@ -55,7 +55,7 @@ Print::on_nothing_to_do(OutputFormat& outputFormat)
 }
 
 void
-Print::on_end(OutputFormat& outputFormat)
+Print::on_end(Hopt& opt, OutputFormat& outputFormat)
 {
     std::string&    message = outputFormat.messages.on_end;
     std::string&    script = outputFormat.scripts.on_end;

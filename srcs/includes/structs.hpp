@@ -9,6 +9,10 @@
 
 struct Hopt
 {
+    char        no_scripts;
+    char        no_messages;
+    char        no_format;
+    char        is_watching;
     char        dry_run;
     char        verbose;
     const char* config_filename;

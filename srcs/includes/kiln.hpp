@@ -21,6 +21,7 @@
 # include "structs.hpp"
 # include "utils.hpp"
 # include "print.hpp"
+
 # include <sys/wait.h>
 # include <cstdlib>
 # include <unistd.h>
@@ -55,7 +56,7 @@ public:
 
     static
     void
-    execute_final_commands(KilnData& kilnData);
+    execute_final_commands(Hopt& opt, KilnData& kilnData);
 
     static
     void
