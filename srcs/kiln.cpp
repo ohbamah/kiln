@@ -110,8 +110,8 @@ Kiln::print_final_commands(const KilnData& kilnData)
     if (!kilnData.commands.outputCompilation.empty())
         std::cout << std::endl;
 }
-
-void
+ 
+int
 Kiln::execute_final_commands(Hopt& opt, KilnData& kilnData)
 {
     bool            error = false;
@@ -130,6 +130,7 @@ Kiln::execute_final_commands(Hopt& opt, KilnData& kilnData)
                     setenv("SOURCE_FILENAME", kilnData.sourceFiles[i].c_str(), true);
                 if (i < kilnData.objectFiles.size())
                     setenv("OBJECT_FILENAME", kilnData.objectFiles[i].c_str(), true);
+
                 Print::before_each_file(opt, kilnData.outputFormat);
                 if (system(kilnData.commands.objectCompilation[i].c_str()) != 0)
                     error = true;
@@ -153,6 +154,7 @@ Kiln::execute_final_commands(Hopt& opt, KilnData& kilnData)
     else
         Print::on_nothing_to_do(opt, kilnData.outputFormat);
     Print::on_end(opt, kilnData.outputFormat);
+    return error ? 1 : 0;
 }
 
 void

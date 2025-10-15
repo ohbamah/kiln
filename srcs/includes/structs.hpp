@@ -115,6 +115,24 @@ struct KilnData
     ObjectInfo                  objects;
     Dependencies                dependencies;
     bool                        isFinalFileExists = true;
+
+    void
+    clear(void)
+    {
+        this->compiler.clear();
+        this->options.clear();
+        this->runtime_options.clear();
+        this->links.clear();
+        this->includes.clear();
+        this->links_paths.clear();
+        this->sourceFiles.clear();
+        this->objectFiles.clear();
+        this->headerDependenciesFiles.clear();
+        this->commands.mkdirP.clear();
+        this->commands.finalExec.clear();
+        this->commands.objectCompilation.clear();
+        this->commands.outputCompilation.clear();
+    }
 };
 
 #endif

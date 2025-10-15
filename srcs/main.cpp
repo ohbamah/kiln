@@ -99,13 +99,14 @@ handle_final_command(KilnData& kilnData, Node& config)
     setenv("OBJECTS_PATH", kilnData.objects.path.c_str(), true);
 }
 
-void
+int
 base_rule(Hopt& opt, KilnData& kilnData)
 {
     if (opt.verbose)
         Kiln::print_final_commands(kilnData);
     if (!opt.dry_run)
-        Kiln::execute_final_commands(opt, kilnData);
+        return Kiln::execute_final_commands(opt, kilnData);
+    return 0;
 }
 
 int kiln(int ac, char** av)

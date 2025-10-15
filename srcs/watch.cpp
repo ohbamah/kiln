@@ -61,9 +61,10 @@ Watch::Invoke(Hopt& opt, KilnData& kilnData)
         }
 
         if (nev > 0) {  
-            memset(&kilnData, 0, sizeof(KilnData));
+            // std::cout << "Files changed, checking what needs recompilation...\n";
+            kilnData.clear();
             handle_final_command(kilnData, Watch::config);
-            Watch::ExecuteBaseRule(opt, kilnData);
+            Watch::ExecuteBaseRule(opt, kilnData); 
         }
     }
 }
@@ -122,29 +123,36 @@ Watch::ExecuteBaseRule(Hopt& opt, KilnData& kilnData)
     DateTime    startTime;
     DateTime    endTime;
 
-    // Watch::AddLog("Files changed...");
+    Watch::result_status = COMPILATION;
+    Watch::AddLog("Compilation in progress..."); 
 
     startTime = DateTime::Current();
-    base_rule(opt, kilnData);
+    Watch::result_status = base_rule(opt, kilnData); 
     endTime = DateTime::Current();
 
-    unsigned int    useconds = ((endTime.hours - startTime.hours) * 60 * 60 * 1000) +
-                               ((endTime.minutes - startTime.minutes) * 60 * 1000) +
-                               ((endTime.seconds - startTime.seconds) * 1000) +
-                               ((endTime.useconds - startTime.useconds));
-    unsigned int    seconds = ((endTime.hours - startTime.hours) * 60 * 60) +
-                              ((endTime.minutes - startTime.minutes) * 60) +
-                              ((endTime.seconds - startTime.seconds)) +
-                              ((endTime.useconds - startTime.useconds) / 1000);
-    if (useconds > 1000)
-        useconds -=  1000 * (useconds / 1000);
+    long long start_ms = (long long)startTime.hours * 3600000 + 
+                         (long long)startTime.minutes * 60000 + 
+                         (long long)startTime.seconds * 1000 + 
+                         (long long)startTime.useconds;
+    
+    long long end_ms = (long long)endTime.hours * 3600000 + 
+                       (long long)endTime.minutes * 60000 + 
+                       (long long)endTime.seconds * 1000 + 
+                       (long long)endTime.useconds;
+
+    long long diff_ms = end_ms - start_ms;
+    if (diff_ms < 0) diff_ms = 0;
+    
+    unsigned int seconds = diff_ms / 1000;
+    unsigned int useconds = diff_ms % 1000;
     if (useconds < 10)
         format = "000" + std::to_string(useconds);
     else if (useconds < 100)
         format = "00" + std::to_string(useconds);
     else if (useconds < 1000)
         format = "0" + std::to_string(useconds);
-    // Watch::AddLog("Compilation done in " + std::to_string(seconds) + "," + format + "s");
+
+    Watch::AddLog("Compilation done in " + std::to_string(seconds) + "," + format + "s");
 }
 
 void
@@ -157,13 +165,10 @@ Watch::CloseFiles(void)
 void
 Watch::Init(Hopt& opt)
 {
-    // opt.no_format = true;
-    // opt.no_messages = true;
-    // opt.no_scripts = true;
-    setvbuf(stdout, NULL, _IOLBF, 0);
+    opt.no_format = true;
     Watch::Signal();
     Watch::startingAt = DateTime::Current().ToStrf("%Y-%M-%D %h:%m:%s");
-    // Watch::DisplayInterface();
+    Watch::DisplayInterface();
     Termios::Capture();
 }
 
@@ -191,11 +196,11 @@ Watch::InterpretKey(Hopt& opt, KilnData& kilnData, char key)
             break;
         case 'C':
         case 'c':
-            Watch::logs.clear();
             Watch::ForceRefresh();
             break;
         case 'T':
         case 't':
+            Watch::result_log.clear();
             Watch::AddLog("Test log");
             break;
         case 'V':
@@ -214,7 +219,7 @@ Watch::InterpretKey(Hopt& opt, KilnData& kilnData, char key)
 void
 Watch::AddLog(const std::string& log)
 {
-    Watch::logs.emplace_back(log);
+    Watch::result_log = log;
     Watch::ForceRefresh();
 }
 
@@ -223,50 +228,50 @@ Watch::ForceRefresh(void)
 {
     Watch::ClearScreen();
     Watch::DisplayInterface();
-    // fflush(stdout);
 }
 
 void
 Watch::ClearScreen(void)
 {
-    printf("\033[3J\033[2J\033[H");
-    // fflush(stdout);
 }
 
 void
 Watch::DisplayInterface(void)
 {
-    Watch::ClearScreen();
-    
-    // Header
-    printf("\033[1;36m╔═══════════════════════════════════════════════════════════════╗\033[0m\n");
-    printf("\033[1;36m║\033[0m                    \033[1;34mKILN FILE WATCHER\033[0m                          \033[1;36m║\033[0m\n");
-    printf("\033[1;36m╚═══════════════════════════════════════════════════════════════╝\033[0m\n\n");
-    
-    // Status section;
-    printf("\033[1;37m🕐 Started:\033[0m %s\n", Watch::startingAt);
-    
-    printf("\n\033[1;36m" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "\033[0m\n");
-    
-    // Activity log
-    printf("\033[1;37m📋 ACTIVITY LOG:\033[0m\n\n");
-    for (unsigned int i = 0 ; i < Watch::logs.size() ; ++i)
-        printf("\033[0;37m%s\033[0m\n", Watch::logs[i].c_str());
+    std::string buffer;
 
-    printf("\n\033[1;36m" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "─" "\033[0m\n");
+    buffer.reserve(5000);
 
-    printf("\033[1;37m🎮 CONTROLS:\033[0m\n");
-    printf("  \033[1;33mCtrl+C\033[0m  Stop watching\n");
-    printf("  \033[1;33mq\033[0m       Quit\n");
-    printf("  \033[1;33mt\033[0m       Test log\n");
-    printf("  \033[1;33mr\033[0m       Force rebuild\n");
-    printf("  \033[1;33mc\033[0m       Clear log\n");
-    printf("  \033[1;33mf\033[0m       Force refresh\n");
-    printf("  \033[1;33mv\033[0m       Verbosity\n");
-    printf("  \033[1;33mp\033[0m       Parse config file\n");
+    buffer = "\033[3J\033[2J\033[H"; 
+    buffer += "\033[3J\033[2J\033[H"; 
 
-    printf("\n\033[1;32m⚡ Watching for changes... Press Ctrl+C to stop\033[0m\n");
-    // fflush(stdout);
+    buffer += "\033[1;36m╔═══════════════════════════════════════════════════════════════╗\033[0m\n";
+    buffer += "\033[1;36m║\033[0m                    \033[1;34mKILN FILE WATCHER\033[0m                          \033[1;36m║\033[0m\n";
+    buffer += "\033[1;36m╚═══════════════════════════════════════════════════════════════╝\033[0m\n\n";
+
+    buffer += "\033[1;37m🕐 Started:\033[0m " + std::string(Watch::startingAt) + "\n\n"; 
+
+    buffer += "\033[1;37m🎮 CONTROLS:\033[0m\n";
+    buffer += "  \033[1;33mCtrl+C\033[0m  Stop watching\n";
+    buffer += "  \033[1;33mq\033[0m       Quit\n";
+    buffer += "  \033[1;33mt\033[0m       Test log\n";
+    buffer += "  \033[1;33mr\033[0m       Force rebuild\n";
+    buffer += "  \033[1;33mc\033[0m       Clear\n";
+    buffer += "  \033[1;33mf\033[0m       Force refresh\n";
+    buffer += "  \033[1;33mv\033[0m       Verbosity\n";
+    buffer += "  \033[1;33mp\033[0m       Parse config file\n";
+
+    buffer += "\n";
+    if (Watch::result_status == SUCCESS)
+        buffer += "\033[1;32m";
+    if (Watch::result_status == ERROR)
+        buffer += "\033[1;31m";
+    if (Watch::result_status == COMPILATION)
+        buffer += "\033[1;33m";
+    buffer += Watch::result_log + "\033[0m";
+
+    write(STDOUT_FILENO, buffer.data(), buffer.size());     
+    fflush(stdout);
 }
 
 void

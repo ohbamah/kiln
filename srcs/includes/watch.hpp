@@ -3,6 +3,10 @@
 
 # define MAX_FILES  1024
 
+# define SUCCESS        0
+# define ERROR          1
+# define COMPILATION    2
+
 # include "structs.hpp"
 # include "DateTime.hpp"
 # include "termios.hpp"
@@ -19,7 +23,7 @@
 # include <string>
 # include <vector>
 
-void
+int
 base_rule(Hopt& opt, KilnData& kilnData);
 
 void
@@ -130,8 +134,12 @@ private:
     paths[PATH_MAX] = { 0 };
 
     static inline
-    std::vector<std::string>
-    logs;
+    int
+    result_status = COMPILATION;
+
+    static inline
+    std::string
+    result_log = "";
 };
 
 #endif

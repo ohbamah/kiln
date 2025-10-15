@@ -55,7 +55,7 @@ public:
     print_final_commands(const KilnData& kilnData);
 
     static
-    void
+    int
     execute_final_commands(Hopt& opt, KilnData& kilnData);
 
     static
@@ -76,8 +76,6 @@ public:
     rules_map;
 
 private:
-
-
 };
 
 #endif
