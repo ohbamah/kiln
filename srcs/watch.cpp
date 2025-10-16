@@ -124,7 +124,7 @@ Watch::ExecuteBaseRule(Hopt& opt, KilnData& kilnData)
     DateTime    endTime;
 
     Watch::result_status = COMPILATION;
-    Watch::AddLog("Compilation in progress..."); 
+    Watch::AddLog("Compilation in progress...");
 
     startTime = DateTime::Current();
     Watch::result_status = base_rule(opt, kilnData); 
@@ -241,34 +241,25 @@ Watch::DisplayInterface(void)
     std::string buffer;
 
     buffer.reserve(5000);
+    buffer = "";
+    if (Watch::result_status != ERROR)
+    {
+        buffer += "\033[3J\033[2J\033[H"; 
+        buffer += "\033[3J\033[2J\033[H"; 
 
-    buffer = "\033[3J\033[2J\033[H"; 
-    buffer += "\033[3J\033[2J\033[H"; 
+        buffer += "\033[1;37m🕐 Started:\033[0m " + std::string(Watch::startingAt) + "\n\n";
+    }
 
-    buffer += "\033[1;36m╔═══════════════════════════════════════════════════════════════╗\033[0m\n";
-    buffer += "\033[1;36m║\033[0m                    \033[1;34mKILN FILE WATCHER\033[0m                          \033[1;36m║\033[0m\n";
-    buffer += "\033[1;36m╚═══════════════════════════════════════════════════════════════╝\033[0m\n\n";
-
-    buffer += "\033[1;37m🕐 Started:\033[0m " + std::string(Watch::startingAt) + "\n\n"; 
-
-    buffer += "\033[1;37m🎮 CONTROLS:\033[0m\n";
-    buffer += "  \033[1;33mCtrl+C\033[0m  Stop watching\n";
-    buffer += "  \033[1;33mq\033[0m       Quit\n";
-    buffer += "  \033[1;33mt\033[0m       Test log\n";
-    buffer += "  \033[1;33mr\033[0m       Force rebuild\n";
-    buffer += "  \033[1;33mc\033[0m       Clear\n";
-    buffer += "  \033[1;33mf\033[0m       Force refresh\n";
-    buffer += "  \033[1;33mv\033[0m       Verbosity\n";
-    buffer += "  \033[1;33mp\033[0m       Parse config file\n";
-
-    buffer += "\n";
-    if (Watch::result_status == SUCCESS)
-        buffer += "\033[1;32m";
-    if (Watch::result_status == ERROR)
-        buffer += "\033[1;31m";
-    if (Watch::result_status == COMPILATION)
-        buffer += "\033[1;33m";
-    buffer += Watch::result_log + "\033[0m";
+    if (!Watch::result_log.empty())
+    {
+        if (Watch::result_status == SUCCESS)
+            buffer += "\033[1;32m";
+        if (Watch::result_status == ERROR)
+            buffer += "\033[1;31m";
+        if (Watch::result_status == COMPILATION)
+            buffer += "\033[1;33m";
+        buffer += Watch::result_log + "\033[0m\n";
+    }
 
     write(STDOUT_FILENO, buffer.data(), buffer.size());     
     fflush(stdout);
