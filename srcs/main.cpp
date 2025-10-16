@@ -112,7 +112,8 @@ base_rule(Hopt& opt, KilnData& kilnData)
 int kiln(int ac, char** av)
 {
     Hopt    opt = {
-        .config_filename = DEFAULT_CONFIG_FILENAME
+        .config_filename = DEFAULT_CONFIG_FILENAME,
+        .av = av
     };
 
     hopt_program_description((char*)"Kiln is a tool to compile C/Clay files with a yml config file.");
@@ -120,8 +121,8 @@ int kiln(int ac, char** av)
 
         // For only the KILN's DEFAULT options
     hopt_allow_undef();
-    int c = hopt(ac, av);
-    if (c == -1)
+    opt.options_count = hopt(ac, av);
+    if (opt.options_count == -1)
         handle_hopt_error();
     hopt_reset(); // Reset `allow_undef`
 
@@ -149,7 +150,7 @@ int kiln(int ac, char** av)
     }
 
     hopt_end_on_arg(); // Because options/cmds are sorts with the first call to `hopt`
-    c = hopt(ac, av);
+    int c = hopt(ac, av);
     if (c == -1)
         handle_hopt_error();
 

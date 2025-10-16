@@ -76,6 +76,10 @@ public:
     rules_map;
 
 private:
+
+    static
+    void
+    ParseRuleCallsInRules(Hopt& opt, std::string&);
 };
 
 #endif

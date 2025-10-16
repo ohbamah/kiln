@@ -11,24 +11,21 @@ Kiln::rules_map = {
 void*
 Kiln::find_or_create_shell_subcommand(void* arg)
 {
-    Rule*   props = (Rule*)arg;
+    Rule*       props = (Rule*)arg;
+    std::string cmd;
 
     if (!hopt_help_has_been_called_v)
     {
+        if (props->run.empty() && Kiln::rules_map.contains(props->rulename))
+            cmd = Kiln::rules_map[props->rulename].first;
+        else
+            cmd = props->run;
+        Kiln::ParseRuleCallsInRules(*props->opt, cmd);
+
         if (props->opt->verbose)
-        {
-            if (props->run.empty() && Kiln::rules_map.contains(props->rulename))
-                printf("%s\n", Kiln::rules_map[props->rulename].first);
-            else
-                printf("%s\n", props->run.c_str());
-        }
+            printf("%s\n", cmd.data());
         if (!props->opt->dry_run)
-        {
-            if (props->run.empty() && Kiln::rules_map.contains(props->rulename))
-                system(Kiln::rules_map[props->rulename].first);
-            else
-                system(props->run.c_str());
-        }
+            system(cmd.data());
     }
 
     Kiln::at_least_one_subcommand_has_been_executed = true;
@@ -173,4 +170,52 @@ void
 Kiln::create_final_command(KilnData& kilnData)
 {
     kilnData.commands.finalExec = kilnData.commands.outputCompilation;
+}
+
+void
+Kiln::ParseRuleCallsInRules(Hopt& opt, std::string& ruleCmd)
+{
+    std::size_t     start = 0;
+    std::size_t     end = 0;
+    std::size_t     pos = 0;
+    std::string     ruleRef = "";
+
+    while (ruleCmd[pos] && pos != std::string::npos)
+    {
+        pos = ruleCmd.find_first_of('$', pos);
+        if (pos == std::string::npos)
+            break;
+        if (ruleCmd[++pos] == '(')
+        {
+            // logic
+            // Gérer les quotes
+
+            ++pos; // Skip the first '('
+            start = pos;
+            for ( ; ruleCmd[pos] && ruleCmd[pos] != ')' ; ++pos)
+                ;
+            if (!ruleCmd[pos])
+                break ;
+            end = pos;
+            ruleRef = ruleCmd.substr(start, end - start);
+            if (!Kiln::rules_map.contains(ruleRef) && ruleRef != "base")
+            {
+                ++pos;
+                continue ;
+            }
+            else if (ruleRef == "base")
+            {
+                std::string prog;
+                for (int j = 0 ; j < opt.options_count + 1 ; ++j)
+                    prog += opt.av[j] + std::string(" ");
+                ruleCmd.replace(ruleCmd.begin() + start - 2, ruleCmd.begin() + end + 1, prog);
+            }
+            else
+                ruleCmd.replace(ruleCmd.begin() + start - 2, ruleCmd.begin() + end + 1, Kiln::rules_map[ruleRef].first);
+        }
+        else
+            while (ruleCmd[pos] && ruleCmd[pos] != ')')
+                ++pos;
+        ++pos; // skip the last ')'
+    }
 }

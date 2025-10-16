@@ -9,6 +9,9 @@
 
 struct Hopt
 {
+    char**      av;
+    int         options_count;
+
     char        no_scripts;
     char        no_messages;
     char        no_format;
