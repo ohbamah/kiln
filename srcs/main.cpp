@@ -49,6 +49,8 @@ generate_rules_as_subcmd(Hopt& opt, Node& config)
                 hopt_help_option((char*)"h=-help", 1, 0);
                 if (description.empty() && Kiln::rules_map.contains(ruleName))
                     description = Kiln::rules_map[ruleName].second;
+                else if (!Kiln::rules_map.contains(ruleName))
+                    Kiln::rules_map.emplace(ruleName, Kiln::TRulesAndDescription(strdup(run.data()), strdup(description.data())));
                 hopt_program_description(strdup(description.c_str()));
                 generate_basic_program_options(opt);
             }
