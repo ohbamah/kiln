@@ -12,11 +12,11 @@
 #
 kiln:
   env:
-    WATCH_CONF_TIME: '*/30 * * * * *'
+    VAR: value
   # var:
   #   VERSION: feur # usage ${FEUR}, not in env, just here (in config file)
   compiler: clang++
-  parallelization: true
+  # parallelization: true
   # platform:
   #   windows:
   #     links: [ws2_32, winmm]
@@ -67,10 +67,10 @@ kiln:
     fclean:
     re:
     custom_re:
-      run: |
-        rm -rf $OBJECTS_PATH
-        rm -f $OUTPUT_PATH/$OUTPUT_FILENAME
-        $(base)
+      # run: |
+      #   rm -rf $OBJECTS_PATH
+      #   rm -f $OUTPUT_PATH/$OUTPUT_FILENAME
+      #   $(base)
       description: Yo mister White
   objects:
     path: .objs
