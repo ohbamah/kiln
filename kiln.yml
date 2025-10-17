@@ -5,6 +5,11 @@
 #
 # Avec un fichier de config, l'utiliser a juste a faire `./forge` ou `./forge --config=./path/conf.yml`
 #
+# TODO:
+#  - Can execute rules when Kiln is --watch(ing)
+#  - Expend `*` and `**` jokers
+#  - Option to not hide `Compiling...` and `Compilation done in Ns`
+#
 kiln:
   env:
     WATCH_CONF_TIME: '*/30 * * * * *'
