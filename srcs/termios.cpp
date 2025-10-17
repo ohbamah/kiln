@@ -9,7 +9,7 @@ Termios::Capture(void)
     tcgetattr(STDIN_FILENO, &Termios::old_termios);
 
     struct termios  new_termios = Termios::old_termios;
-    new_termios.c_lflag &= ~(ICANON);
+    new_termios.c_lflag &= ~(ICANON | ECHO);
     new_termios.c_cc[VMIN] = 0;
     new_termios.c_cc[VTIME] = 0;
 
