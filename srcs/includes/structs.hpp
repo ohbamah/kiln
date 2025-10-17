@@ -23,6 +23,8 @@ struct Hopt
 
 struct Rule
 {
+    Rule() = default;
+
     Rule(const std::string& rulename, const std::string& run) : rulename(rulename), run(run)
     {}
     ~Rule()

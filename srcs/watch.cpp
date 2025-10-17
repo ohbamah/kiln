@@ -184,35 +184,18 @@ Watch::Destroy(void)
 void
 Watch::InterpretKey(Hopt& opt, KilnData& kilnData, char key)
 {
-    switch (key)
+    if (key == '\n' || key == '\r')
     {
-        case 'Q':
-        case 'q':
-            Watch::Exit();
-            break;
-        case 'R':
-        case 'r':
-            Watch::ExecuteBaseRule(opt, kilnData);
-            break;
-        case 'C':
-        case 'c':
-            Watch::ForceRefresh();
-            break;
-        case 'T':
-        case 't':
-            Watch::result_log.clear();
-            Watch::AddLog("Test log");
-            break;
-        case 'V':
-        case 'v':
-            break;
-        case 'f':  // Force refresh
-        case 'F':
-            Watch::ForceRefresh();
-            break;
-        case 'P':
-        case 'p':
-            break;
+        Rule         rule;
+        const
+        std::string& buffer = Termios::GetBuffer();
+
+        rule.opt = &opt;
+        rule.rulename = buffer;
+        rule.run = "";
+        Kiln::find_or_create_shell_subcommand((void*)&rule);
+
+        Termios::EraseBuffer();
     }
 }
 
