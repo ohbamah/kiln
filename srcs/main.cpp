@@ -98,6 +98,7 @@ handle_final_command(KilnData& kilnData, Node& config)
     setenv("OUTPUT_PATH", kilnData.output.path.c_str(), true);
     setenv("OUTPUT_TYPE", kilnData.output.type == OutputType::Binary ? "binary" : "library", true);
     setenv("OUTPUT_FILENAME", kilnData.output.name.c_str(), true);
+    setenv("DEPENDENCIES_PATH", kilnData.dependencies.path.c_str(), true);
     setenv("OBJECTS_PATH", kilnData.objects.path.c_str(), true);
 }
 

@@ -33,10 +33,8 @@ Watch::Signal(void)
 void
 Watch::Invoke(Hopt& opt, KilnData& kilnData)
 {
-    char            key;
     struct kevent   changeList[MAX_FILES];
 
-    // Créer la kqueue
     Watch::kq = kqueue();
     if (Watch::kq == -1) {
         perror("kqueue");
@@ -45,14 +43,10 @@ Watch::Invoke(Hopt& opt, KilnData& kilnData)
 
     Watch::FetchFilesToSpy(changeList, kilnData);
     Watch::RegisterEvents(changeList);
-    // Watch::AddLog(std::to_string(Watch::filepaths.size()) + " files to spy");
     
     while (1)
     {
         struct kevent   events[MAX_FILES];
-
-        if ((key = Termios::GetKey()))
-            Watch::InterpretKey(opt, kilnData, key);
         
         int nev = kevent(Watch::kq, NULL, 0, events, MAX_FILES, NULL);
         if (nev == -1) {
@@ -61,12 +55,28 @@ Watch::Invoke(Hopt& opt, KilnData& kilnData)
         }
 
         if (nev > 0) {  
-            // std::cout << "Files changed, checking what needs recompilation...\n";
             kilnData.clear();
             handle_final_command(kilnData, Watch::config);
-            Watch::ExecuteBaseRule(opt, kilnData); 
+            Watch::ExecuteBaseRule(opt, kilnData);
+            Watch::RefetchFilesAndRegisterThem(changeList, kilnData);
         }
     }
+}
+
+void
+Watch::CloseSpyingFiles(void)
+{
+    for (unsigned long i = 0 ; i < Watch::fds.size() ; ++i)
+        close(Watch::fds[i]);
+    Watch::fds.clear();
+}
+
+void
+Watch::RefetchFilesAndRegisterThem(struct kevent changeList[MAX_FILES], KilnData& kilnData)
+{
+    Watch::CloseSpyingFiles();
+    Watch::FetchFilesToSpy(changeList, kilnData);
+    Watch::RegisterEvents(changeList);
 }
  
 void
@@ -76,14 +86,19 @@ Watch::FetchFilesToSpy(struct kevent changeList[MAX_FILES], KilnData& kilnData)
 
     Watch::fds.clear();
     Watch::filepaths = kilnData.sourceFiles;
-    for (unsigned int i = 0 ; i < kilnData.headerDependenciesFiles.size() ; ++i)
+    for (unsigned int i = 0 ; i < kilnData.objectFiles.size() ; ++i)
     {
-        Utils::parse_dependencies_file(dependenciesFiles, kilnData.headerDependenciesFiles[i]);
-        Watch::filepaths.insert(Watch::filepaths.end(), 
-                                dependenciesFiles.begin(), 
-                                dependenciesFiles.end());
+        std::string                 dependenciesFile = Utils::change_path_filename(Utils::remove_extension_in_filename(kilnData.sourceFiles[i]), kilnData.dependencies.path, !kilnData.dependencies.relative) + kilnData.dependencies.suffix + "." + kilnData.dependencies.extension;
+        
+        Utils::parse_dependencies_file(dependenciesFiles, dependenciesFile);
+        Watch::filepaths.insert(
+            Watch::filepaths.end(), 
+            dependenciesFiles.begin(), 
+            dependenciesFiles.end()
+        );
         dependenciesFiles.clear();
     }
+    
     
     for (unsigned int i = 0 ; i < Watch::filepaths.size() ; ++i)
     {
@@ -103,7 +118,7 @@ Watch::FetchFilesToSpy(struct kevent changeList[MAX_FILES], KilnData& kilnData)
 }
 
 void
-Watch::RegisterEvents(struct kevent changeList[])
+Watch::RegisterEvents(struct kevent changeList[MAX_FILES])
 {
     kevent(Watch::kq, changeList, Watch::fds.size(), NULL, 0, NULL);
 }
@@ -156,13 +171,6 @@ Watch::ExecuteBaseRule(Hopt& opt, KilnData& kilnData)
 }
 
 void
-Watch::CloseFiles(void)
-{
-    for (unsigned int i = 0 ; i < Watch::fds.size() ; ++i)
-        close(Watch::fds[i]);
-}
-
-void
 Watch::Init(Hopt& opt)
 {
     opt.no_format = true;
@@ -182,7 +190,7 @@ Watch::Destroy(void)
 }
 
 void
-Watch::InterpretKey(Hopt& opt, KilnData& kilnData, char key)
+Watch::InterpretKey(Hopt& opt, char key)
 {
     if (key == '\n' || key == '\r')
     {
@@ -227,8 +235,8 @@ Watch::DisplayInterface(void)
     buffer = "";
     if (Watch::result_status != ERROR)
     {
-        buffer += "\033[3J\033[2J\033[H"; 
-        buffer += "\033[3J\033[2J\033[H"; 
+        buffer += "\033[3J\033[2J\033[H";
+        buffer += "\033[3J\033[2J\033[H";
 
         buffer += "\033[1;37m🕐 Started:\033[0m " + std::string(Watch::startingAt) + "\n\n";
     }

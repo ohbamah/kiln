@@ -51,11 +51,19 @@ private:
 
     static
     void
+    CloseSpyingFiles(void);
+
+    static
+    void
+    RefetchFilesAndRegisterThem(struct kevent changeList[MAX_FILES], KilnData& kilnData);
+
+    static
+    void
     FetchFilesToSpy(struct kevent changeList[MAX_FILES], KilnData& kilnData);
 
     static
     void
-    RegisterEvents(struct kevent changeList[]);
+    RegisterEvents(struct kevent changeList[MAX_FILES]);
 
     static
     void
@@ -75,11 +83,7 @@ private:
 
     static
     void
-    InterpretKey(Hopt& opt, KilnData& kilnData, char key);
-
-    static
-    void
-    CloseFiles(void);
+    InterpretKey(Hopt& opt, char key);
 
     static
     void
